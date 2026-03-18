@@ -1,3 +1,4 @@
+"""MoneyPoly card decks and actions for Chance and Community Chest."""
 import random
 
 CHANCE_CARDS = [

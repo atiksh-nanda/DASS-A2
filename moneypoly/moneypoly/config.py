@@ -1,3 +1,4 @@
+"""MoneyPoly configuration constants, starting values, and board positions."""
 STARTING_BALANCE = 1500
 GO_SALARY = 200
 BOARD_SIZE = 40

@@ -1,3 +1,4 @@
+"""MoneyPoly terminal user interface, text formatting, and input helpers."""
 def print_banner(title):
     """Print a decorated section header."""
     width = 52

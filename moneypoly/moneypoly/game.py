@@ -1,4 +1,4 @@
-
+"""MoneyPoly core game loop, turn resolution, and rule enforcement."""
 from moneypoly.config import (
     JAIL_FINE,
     AUCTION_MIN_INCREMENT,

@@ -1,3 +1,4 @@
+"""MoneyPoly board representation, special tiles, and layout management."""
 from moneypoly.property import Property, PropertyGroup
 from moneypoly.config import (
     JAIL_POSITION,
