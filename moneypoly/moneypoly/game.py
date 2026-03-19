@@ -15,9 +15,14 @@ from moneypoly.cards import CardDeck, CHANCE_CARDS, COMMUNITY_CHEST_CARDS
 from moneypoly import ui
 
 
-class Game:
+class Game: # pylint: disable=too-many-instance-attributes
     """Manages the full state and flow of a MoneyPoly game session."""
 
+    __slots__ = (
+        'board', 'bank', 'dice', 'players', 'current_index',
+        'turn_number', 'running', 'chance_deck', 'community_deck'
+    )
+    # Added __slots__ to the Game class to reduce instance attributes ^
     def __init__(self, player_names):
         self.board = Board()
         self.bank = Bank()
@@ -249,95 +254,124 @@ class Game:
         else:
             print(f"  No bids placed. {prop.name} remains unowned.")
 
+    # the following function was refactored to use _try_use_jail_free_card and _try_pay_jail_fine
+    # to reduce branches (1.2: pylint)
     def _handle_jail_turn(self, player):
         """Process a jailed player's turn — offer to pay fine or use card."""
         print(f"  {player.name} is in jail (turn {player.jail_turns + 1}/3).")
-
-        # Use a Get Out of Jail Free card if available
-        if player.get_out_of_jail_cards > 0:
-            if ui.confirm("  Use your Get Out of Jail Free card? (y/n): "):
-                player.get_out_of_jail_cards -= 1
-                player.in_jail = False
-                player.jail_turns = 0
-                print(f"  {player.name} used a Get Out of Jail Free card!")
-                roll = self.dice.roll()
-                print(f"  {player.name} rolled: {self.dice.describe()}")
-                self._move_and_resolve(player, roll)
-                return
-
-        # Offer to pay the fine voluntarily
-        if ui.confirm(f"  Pay ${JAIL_FINE} fine to leave jail? (y/n): "):
-            self.bank.collect(JAIL_FINE)
-            player.in_jail = False
-            player.jail_turns = 0
-            print(f"  {player.name} paid the ${JAIL_FINE} fine and is released.")
-            roll = self.dice.roll()
-            print(f"  {player.name} rolled: {self.dice.describe()}")
-            self._move_and_resolve(player, roll)
+        if self._try_use_jail_free_card(player):
             return
+        if self._try_pay_jail_fine(player):
+            return
+        self._serve_jail_turn(player)
 
-        # No action
-        # Serve the turn
+    def _try_use_jail_free_card(self, player):
+        """Try to use a Get Out of Jail Free card. Returns True if used."""
+        if player.get_out_of_jail_cards == 0:
+            return False
+        if not ui.confirm("  Use your Get Out of Jail Free card? (y/n): "):
+            return False
+        player.get_out_of_jail_cards -= 1
+        player.in_jail = False
+        player.jail_turns = 0
+        print(f"  {player.name} used a Get Out of Jail Free card!")
+        roll = self.dice.roll()
+        print(f"  {player.name} rolled: {self.dice.describe()}")
+        self._move_and_resolve(player, roll)
+        return True
+
+    def _try_pay_jail_fine(self, player):
+        """Try to pay the jail fine. Returns True if paid."""
+        if not ui.confirm(f"  Pay ${JAIL_FINE} fine to leave jail? (y/n): "):
+            return False
+        self.bank.collect(JAIL_FINE)
+        player.in_jail = False
+        player.jail_turns = 0
+        print(f"  {player.name} paid the ${JAIL_FINE} fine and is released.")
+        roll = self.dice.roll()
+        print(f"  {player.name} rolled: {self.dice.describe()}")
+        self._move_and_resolve(player, roll)
+        return True
+
+    def _serve_jail_turn(self, player):
+        """Serve a turn in jail."""
         player.jail_turns += 1
-        if player.jail_turns >= 3:
-            # Mandatory release after 3 turns
-            print(f"  {player.name} must leave jail. Paying mandatory ${JAIL_FINE} fine.")
-            player.deduct_money(JAIL_FINE)
-            self.bank.collect(JAIL_FINE)
-            player.in_jail = False
-            player.jail_turns = 0
-            roll = self.dice.roll()
-            print(f"  {player.name} rolled: {self.dice.describe()}")
-            self._move_and_resolve(player, roll)
+        if player.jail_turns < 3:
+            return
+        print(f"  {player.name} must leave jail. Paying mandatory ${JAIL_FINE} fine.")
+        player.deduct_money(JAIL_FINE)
+        self.bank.collect(JAIL_FINE)
+        player.in_jail = False
+        player.jail_turns = 0
+        roll = self.dice.roll()
+        print(f"  {player.name} rolled: {self.dice.describe()}")
+        self._move_and_resolve(player, roll)
 
+    # this function was refactored to reduce branches (1.2:)
     def _apply_card(self, player, card):
         """Apply the effect of a drawn Chance or Community Chest card."""
         if card is None:
             return
-        print(f"  Card drawn: \"{card['description']}\"")
-        action = card["action"]
-        value = card["value"]
+        print(f'  Card drawn: "{card["description"]}"')
+        action_handlers = {
+            "collect": self._handle_collect_card,
+            "pay": self._handle_pay_card,
+            "jail": self._handle_jail_card,
+            "jail_free": self._handle_jail_free_card,
+            "move_to": self._handle_move_card,
+            "birthday": self._handle_birthday_card,
+            "collect_from_all": self._handle_collect_from_all_card,
+        }
+        handler = action_handlers.get(card["action"])
+        if handler:
+            handler(player, card["value"])
 
-        if action == "collect":
-            amount = self.bank.pay_out(value)
-            player.add_money(amount)
+    def _handle_collect_card(self, player, value):
+        """Handle collect money card."""
+        amount = self.bank.pay_out(value)
+        player.add_money(amount)
 
-        elif action == "pay":
-            player.deduct_money(value)
-            self.bank.collect(value)
+    def _handle_pay_card(self, player, value):
+        """Handle pay money card."""
+        player.deduct_money(value)
+        self.bank.collect(value)
 
-        elif action == "jail":
-            player.go_to_jail()
-            print(f"  {player.name} has been sent to Jail!")
+    def _handle_jail_card(self, player, _):
+        """Handle go to jail card."""
+        player.go_to_jail()
+        print(f"  {player.name} has been sent to Jail!")
 
-        elif action == "jail_free":
-            player.get_out_of_jail_cards += 1
-            print(f"  {player.name} now holds a Get Out of Jail Free card.")
+    def _handle_jail_free_card(self, player, _):
+        """Handle get out of jail free card."""
+        player.get_out_of_jail_cards += 1
+        print(f"  {player.name} now holds a Get Out of Jail Free card.")
 
-        elif action == "move_to":
-            old_pos = player.position
-            player.position = value
-            if value < old_pos:
-                player.add_money(GO_SALARY)
-                print(f"  {player.name} passed Go and collected ${GO_SALARY}.")
-            tile = self.board.get_tile_type(value)
-            if tile == "property":
-                prop = self.board.get_property_at(value)
-                if prop:
-                    self._handle_property_tile(player, prop)
+    def _handle_move_card(self, player, value):
+        """Handle move to position card."""
+        old_pos = player.position
+        player.position = value
+        if value < old_pos:
+            player.add_money(GO_SALARY)
+            print(f"  {player.name} passed Go and collected ${GO_SALARY}.")
+        tile = self.board.get_tile_type(value)
+        if tile == "property":
+            prop = self.board.get_property_at(value)
+            if prop:
+                self._handle_property_tile(player, prop)
 
-        elif action == "birthday":
-            for other in self.players:
-                if other != player and other.balance >= value:
-                    other.deduct_money(value)
-                    player.add_money(value)
+    def _handle_birthday_card(self, player, value):
+        """Handle birthday card (collect from each player)."""
+        for other in self.players:
+            if other != player and other.balance >= value:
+                other.deduct_money(value)
+                player.add_money(value)
 
-        elif action == "collect_from_all":
-            for other in self.players:
-                if other != player and other.balance >= value:
-                    other.deduct_money(value)
-                    player.add_money(value)
-
+    def _handle_collect_from_all_card(self, player, value):
+        """Handle collect from all players card."""
+        for other in self.players:
+            if other != player and other.balance >= value:
+                other.deduct_money(value)
+                player.add_money(value)
 
     def _check_bankruptcy(self, player):
         """Eliminate `player` from the game if they are bankrupt."""
@@ -457,11 +491,10 @@ class Game:
         for i, prop in enumerate(player.properties):
             print(f"  {i + 1}. {prop.name}")
         pidx = ui.safe_int_input("  Property to offer: ", default=0) - 1
-        if not (0 <= pidx < len(player.properties)):
+        if not 0 <= pidx < len(player.properties):
             return
         chosen_prop = player.properties[pidx]
         cash = ui.safe_int_input(
             f"  Cash to receive from {partner.name}: $", default=0
         )
         self.trade(player, partner, chosen_prop, cash)
-        

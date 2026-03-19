@@ -1,9 +1,16 @@
 """MoneyPoly property models, rent calculations, and color group definitions."""
-class Property:
+class Property:  # pylint: disable=too-many-instance-attributes
     """Represents a single purchasable property tile on the MoneyPoly board."""
 
     FULL_GROUP_MULTIPLIER = 2
+    UNMORTGAGE_INTEREST = 1.1
+    # Reducing instance attributes with __slots__
+    __slots__ = (
+        'name', 'position', 'price', 'base_rent', 'mortgage_value',
+        'owner', 'is_mortgaged', 'houses', 'group'
+    )
 
+    # pylint: disable=too-many-arguments, too-many-positional-arguments
     def __init__(self, name, position, price, base_rent, group=None):
         self.name = name
         self.position = position
@@ -48,8 +55,8 @@ class Property:
         """
         if not self.is_mortgaged:
             return 0
-        
-        cost = int(self.mortgage_value * 1.1)
+
+        cost = int(self.mortgage_value * self.UNMORTGAGE_INTEREST)
         self.is_mortgaged = False
         return cost
 

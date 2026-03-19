@@ -1,8 +1,14 @@
 """MoneyPoly player state, movement, and individual financial mechanics."""
 from moneypoly.config import STARTING_BALANCE, BOARD_SIZE, GO_SALARY, JAIL_POSITION
 
-class Player:
+class Player:  # pylint: disable=too-many-instance-attributes
     """Represents a single player in a MoneyPoly game."""
+
+    # Reducing instance attributes with __slots__
+    __slots__ = (
+        'name', 'balance', 'position', 'properties', 
+        'in_jail', 'jail_turns', 'get_out_of_jail_cards', 'is_eliminated'
+    )
 
     def __init__(self, name, balance=STARTING_BALANCE):
         self.name = name
@@ -83,4 +89,3 @@ class Player:
 
     def __repr__(self):
         return f"Player({self.name!r}, balance={self.balance}, pos={self.position})"
-        
