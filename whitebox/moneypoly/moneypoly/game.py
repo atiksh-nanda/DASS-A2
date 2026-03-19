@@ -263,6 +263,7 @@ class Game:
             return False
 
         buyer.deduct_money(cash_amount)
+        seller.add_money(cash_amount) # money was deducted from buyer but not added to seller (1.3: pytest)
         prop.owner = buyer
         seller.remove_property(prop)
         buyer.add_property(prop)
