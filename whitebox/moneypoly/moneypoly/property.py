@@ -159,7 +159,9 @@ class PropertyGroup:
         """Return True if every property in this group is owned by `player`."""
         if player is None:
             return False
-        return any(p.owner == player for p in self.properties)
+        if not self.properties:  # Empty group
+            return False
+        return all(p.owner == player for p in self.properties) # Changed from any() to all() [1.3: pytest]
 
     def get_owner_counts(self):
         """Return a dict mapping each owner to how many properties they hold in this group."""
