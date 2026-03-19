@@ -215,6 +215,7 @@ class Game:
 
         rent = prop.get_rent()
         player.deduct_money(rent)
+        prop.owner.add_money(rent) # money was deducted from tenant but not added to owner (1.3: pytest)
         print(f"  {player.name} paid ${rent} rent on {prop.name} to {prop.owner.name}.")
 
     def mortgage_property(self, player, prop):
