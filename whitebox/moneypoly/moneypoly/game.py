@@ -343,7 +343,7 @@ class Game:
         if player.balance < JAIL_FINE:
             print(f"  {player.name} cannot afford the ${JAIL_FINE} fine.")
             return False
-        player.deduct_money(JAIL_FINE)
+        player.deduct_money(JAIL_FINE) # money was added to bank but not deducted from player (1.3: pytest)
         self.bank.collect(JAIL_FINE)
         player.in_jail = False
         player.jail_turns = 0
