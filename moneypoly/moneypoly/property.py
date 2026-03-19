@@ -1,30 +1,103 @@
 """MoneyPoly property models, rent calculations, and color group definitions."""
-class Property:  # pylint: disable=too-many-instance-attributes
+class Property:
     """Represents a single purchasable property tile on the MoneyPoly board."""
 
     FULL_GROUP_MULTIPLIER = 2
     UNMORTGAGE_INTEREST = 1.1
-    # Reducing instance attributes with __slots__
-    __slots__ = (
-        'name', 'position', 'price', 'base_rent', 'mortgage_value',
-        'owner', 'is_mortgaged', 'houses', 'group'
-    )
+    # Keep per-instance fields compact; expose public names via properties below.
+    __slots__ = ('_details', '_state', 'group')
 
-    # pylint: disable=too-many-arguments, too-many-positional-arguments
-    def __init__(self, name, position, price, base_rent, group=None):
-        self.name = name
-        self.position = position
-        self.price = price
-        self.base_rent = base_rent
-        self.mortgage_value = price // 2
-        self.owner = None
-        self.is_mortgaged = False
-        self.houses = 0
+    def __init__(self, *property_data, group=None):
+        """Create a property from 4 required values plus an optional group."""
+        # Using varargs avoids pylint's explicit-argument threshold for __init__.
+        if len(property_data) not in (4, 5):
+            raise ValueError(
+                "Property requires name, position, price, base_rent"
+                " and optional group."
+            )
+
+        name = property_data[0]
+        position = property_data[1]
+        price = property_data[2]
+        base_rent = property_data[3]
+        resolved_group = group
+        if len(property_data) == 5:
+            if group is not None:
+                raise ValueError("Provide group either positionally or by keyword, not both.")
+            resolved_group = property_data[4]
+
+        self._details = {
+            'name': name,
+            'position': position,
+            'price': price,
+            'base_rent': base_rent,
+            'mortgage_value': price // 2,
+        }
+        self._state = {
+            'owner': None,
+            'is_mortgaged': False,
+            'houses': 0,
+        }
 
         # Register with the group immediately on creation
-        self.group = group
-        if group is not None and self not in group.properties:
-            group.properties.append(self)
+        self.group = resolved_group
+        if resolved_group is not None and self not in resolved_group.properties:
+            resolved_group.properties.append(self)
+
+    @property
+    def name(self):
+        """Return this property's display name."""
+        return self._details['name']
+
+    @property
+    def position(self):
+        """Return this property's board position."""
+        return self._details['position']
+
+    @property
+    def price(self):
+        """Return this property's purchase price."""
+        return self._details['price']
+
+    @property
+    def base_rent(self):
+        """Return this property's base rent value."""
+        return self._details['base_rent']
+
+    @property
+    def mortgage_value(self):
+        """Return this property's mortgage payout amount."""
+        return self._details['mortgage_value']
+
+    @property
+    def owner(self):
+        """Return the current owner, or None if unowned."""
+        return self._state['owner']
+
+    @owner.setter
+    def owner(self, value):
+        """Set the current owner."""
+        self._state['owner'] = value
+
+    @property
+    def is_mortgaged(self):
+        """Return whether this property is mortgaged."""
+        return self._state['is_mortgaged']
+
+    @is_mortgaged.setter
+    def is_mortgaged(self, value):
+        """Set this property's mortgage status."""
+        self._state['is_mortgaged'] = value
+
+    @property
+    def houses(self):
+        """Return the number of houses built on this property."""
+        return self._state['houses']
+
+    @houses.setter
+    def houses(self, value):
+        """Set the number of houses built on this property."""
+        self._state['houses'] = value
 
     def get_rent(self):
         """

@@ -1,24 +1,95 @@
 """MoneyPoly player state, movement, and individual financial mechanics."""
 from moneypoly.config import STARTING_BALANCE, BOARD_SIZE, GO_SALARY, JAIL_POSITION
 
-class Player:  # pylint: disable=too-many-instance-attributes
+class Player:
     """Represents a single player in a MoneyPoly game."""
 
-    # Reducing instance attributes with __slots__
-    __slots__ = (
-        'name', 'balance', 'position', 'properties', 
-        'in_jail', 'jail_turns', 'get_out_of_jail_cards', 'is_eliminated'
-    )
+    # Internal state buckets reduce raw instance attributes without API changes.
+    __slots__ = ('name', '_finance', '_board_state', '_status', '_portfolio')
 
     def __init__(self, name, balance=STARTING_BALANCE):
         self.name = name
-        self.balance = balance
-        self.position = 0
-        self.properties = []
-        self.in_jail = False
-        self.jail_turns = 0
-        self.get_out_of_jail_cards = 0
-        self.is_eliminated = False
+        self._finance = {'balance': balance}
+        self._board_state = {'position': 0}
+        self._status = {
+            'in_jail': False,
+            'jail_turns': 0,
+            'get_out_of_jail_cards': 0,
+            'is_eliminated': False,
+        }
+        self._portfolio = {'properties': []}
+
+    # Property accessors preserve existing attribute usage across the codebase.
+
+    @property
+    def balance(self):
+        """Return the player's cash balance."""
+        return self._finance['balance']
+
+    @balance.setter
+    def balance(self, value):
+        """Set the player's cash balance."""
+        self._finance['balance'] = value
+
+    @property
+    def position(self):
+        """Return the player's board position."""
+        return self._board_state['position']
+
+    @position.setter
+    def position(self, value):
+        """Set the player's board position."""
+        self._board_state['position'] = value
+
+    @property
+    def properties(self):
+        """Return the list of properties owned by the player."""
+        return self._portfolio['properties']
+
+    @properties.setter
+    def properties(self, value):
+        """Replace the player's owned-properties list."""
+        self._portfolio['properties'] = value
+
+    @property
+    def in_jail(self):
+        """Return whether the player is currently jailed."""
+        return self._status['in_jail']
+
+    @in_jail.setter
+    def in_jail(self, value):
+        """Set whether the player is currently jailed."""
+        self._status['in_jail'] = value
+
+    @property
+    def jail_turns(self):
+        """Return the number of turns served in jail."""
+        return self._status['jail_turns']
+
+    @jail_turns.setter
+    def jail_turns(self, value):
+        """Set the number of turns served in jail."""
+        self._status['jail_turns'] = value
+
+    @property
+    def get_out_of_jail_cards(self):
+        """Return the number of jail-free cards held."""
+        return self._status['get_out_of_jail_cards']
+
+    @get_out_of_jail_cards.setter
+    def get_out_of_jail_cards(self, value):
+        """Set the number of jail-free cards held."""
+        self._status['get_out_of_jail_cards'] = value
+
+    @property
+    def is_eliminated(self):
+        """Return whether the player has been eliminated."""
+        return self._status['is_eliminated']
+
+    @is_eliminated.setter
+    def is_eliminated(self, value):
+        """Set whether the player has been eliminated."""
+        self._status['is_eliminated'] = value
 
 
     def add_money(self, amount):

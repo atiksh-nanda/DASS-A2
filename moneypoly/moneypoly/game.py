@@ -15,24 +15,77 @@ from moneypoly.cards import CardDeck, CHANCE_CARDS, COMMUNITY_CHEST_CARDS
 from moneypoly import ui
 
 
-class Game: # pylint: disable=too-many-instance-attributes
+class Game:
     """Manages the full state and flow of a MoneyPoly game session."""
 
-    __slots__ = (
-        'board', 'bank', 'dice', 'players', 'current_index',
-        'turn_number', 'running', 'chance_deck', 'community_deck'
-    )
-    # Added __slots__ to the Game class to reduce instance attributes ^
+    # Group mutable game state to keep instance-attribute count low for pylint.
+    __slots__ = ('board', 'bank', 'dice', '_state', '_decks')
+
     def __init__(self, player_names):
         self.board = Board()
         self.bank = Bank()
         self.dice = Dice()
-        self.players = [Player(name) for name in player_names]
-        self.current_index = 0
-        self.turn_number = 0
-        self.running = True
-        self.chance_deck = CardDeck(CHANCE_CARDS)
-        self.community_deck = CardDeck(COMMUNITY_CHEST_CARDS)
+        self._state = {
+            'players': [Player(name) for name in player_names],
+            'current_index': 0,
+            'turn_number': 0,
+            'running': True,
+        }
+        # Card decks are isolated from turn state but exposed via properties.
+        self._decks = {
+            'chance': CardDeck(CHANCE_CARDS),
+            'community': CardDeck(COMMUNITY_CHEST_CARDS),
+        }
+
+    @property
+    def players(self):
+        """Return the active players list."""
+        return self._state['players']
+
+    @players.setter
+    def players(self, value):
+        """Set the active players list."""
+        self._state['players'] = value
+
+    @property
+    def current_index(self):
+        """Return the turn-order index of the current player."""
+        return self._state['current_index']
+
+    @current_index.setter
+    def current_index(self, value):
+        """Set the turn-order index of the current player."""
+        self._state['current_index'] = value
+
+    @property
+    def turn_number(self):
+        """Return the number of completed turns."""
+        return self._state['turn_number']
+
+    @turn_number.setter
+    def turn_number(self, value):
+        """Set the number of completed turns."""
+        self._state['turn_number'] = value
+
+    @property
+    def running(self):
+        """Return whether the game loop should continue."""
+        return self._state['running']
+
+    @running.setter
+    def running(self, value):
+        """Set whether the game loop should continue."""
+        self._state['running'] = value
+
+    @property
+    def chance_deck(self):
+        """Return the Chance card deck."""
+        return self._decks['chance']
+
+    @property
+    def community_deck(self):
+        """Return the Community Chest card deck."""
+        return self._decks['community']
 
     def current_player(self):
         """Return the Player whose turn it currently is."""
