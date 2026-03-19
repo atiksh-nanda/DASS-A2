@@ -339,6 +339,11 @@ class Game:
         """Try to pay the jail fine. Returns True if paid."""
         if not ui.confirm(f"  Pay ${JAIL_FINE} fine to leave jail? (y/n): "):
             return False
+        # Check if player can afford the fine
+        if player.balance < JAIL_FINE:
+            print(f"  {player.name} cannot afford the ${JAIL_FINE} fine.")
+            return False
+        player.deduct_money(JAIL_FINE)
         self.bank.collect(JAIL_FINE)
         player.in_jail = False
         player.jail_turns = 0
