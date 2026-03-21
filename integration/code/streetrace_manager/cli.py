@@ -6,6 +6,7 @@ from pathlib import Path
 from streetrace_manager.registration import RegistrationModule
 from streetrace_manager.crew_management import CrewManagementModule
 from streetrace_manager.inventory import InventoryModule
+from streetrace_manager.mission_planning import MissionPlanningModule
 from streetrace_manager.race_management import RaceManagementModule
 from streetrace_manager.results import ResultsModule
 from streetrace_manager.storage import JsonStore
@@ -33,6 +34,7 @@ def _print_main_menu() -> None:
     print("3) Inventory Module")
     print("4) Race Management Module")
     print("5) Results Module")
+    print("6) Mission Planning Module")
     print("0) Exit")
 
 
@@ -751,6 +753,102 @@ def _run_results_tui(module: ResultsModule) -> None:
             print(f"Error: {error}")
 
 
+def _print_mission_menu() -> None:
+    print("\nMission Planning Module:")
+    print("1) Create mission")
+    print("2) List missions")
+    print("3) Assign crew member to mission")
+    print("4) Start mission")
+    print("5) Complete mission")
+    print("0) Back to main menu")
+
+
+def _handle_create_mission(module: MissionPlanningModule) -> None:
+    name = input("Enter mission name: ").strip()
+    mission_type = input("Enter mission type (e.g., delivery/rescue): ").strip()
+    raw_roles = input("Enter required roles (comma-separated): ").strip()
+    roles = [role.strip() for role in raw_roles.split(",") if role.strip()]
+
+    mission = module.create_mission(name=name, mission_type=mission_type, required_roles=roles)
+    print(
+        f"Mission created: {mission.name} | Type: {mission.mission_type} | "
+        f"Required roles: {', '.join(mission.required_roles)}"
+    )
+
+
+def _handle_list_missions(module: MissionPlanningModule) -> None:
+    missions = list(module.list_missions())
+    if not missions:
+        print("No missions found.")
+        return
+
+    print("\nMissions:")
+    for index, mission in enumerate(missions, start=1):
+        assigned = ", ".join(f"{a['member_name']}:{a['role']}" for a in mission.assigned_members) or "none"
+        print(
+            f"{index}. {mission.name} | {mission.mission_type} | "
+            f"Roles: {', '.join(mission.required_roles)} | Assigned: {assigned} | Status: {mission.status}"
+        )
+
+
+def _handle_assign_mission_member(module: MissionPlanningModule) -> None:
+    mission_name = input("Enter mission name: ").strip()
+    member_name = input("Enter crew member name: ").strip()
+    role = input("Enter role for assignment: ").strip()
+
+    assigned = module.assign_member(mission_name=mission_name, member_name=member_name, role=role)
+    if assigned:
+        print(f"Assigned {member_name} as {role} to mission '{mission_name}'.")
+    else:
+        print(f"Mission not found: {mission_name}")
+
+
+def _handle_start_mission(module: MissionPlanningModule) -> None:
+    mission_name = input("Enter mission name to start: ").strip()
+    started, missing_roles = module.start_mission(mission_name=mission_name)
+    if started:
+        print(f"Mission started: {mission_name}")
+        return
+
+    if missing_roles:
+        print(f"Mission cannot start. Missing required roles: {', '.join(missing_roles)}")
+    else:
+        print(f"Mission not found: {mission_name}")
+
+
+def _handle_complete_mission(module: MissionPlanningModule) -> None:
+    mission_name = input("Enter mission name to complete: ").strip()
+    completed = module.complete_mission(mission_name=mission_name)
+    if completed:
+        print(f"Mission completed: {mission_name}")
+    else:
+        print(f"Mission not found: {mission_name}")
+
+
+def _run_mission_tui(module: MissionPlanningModule) -> None:
+    while True:
+        _print_mission_menu()
+        choice = input("Select option: ").strip()
+
+        try:
+            if choice == "1":
+                _handle_create_mission(module)
+            elif choice == "2":
+                _handle_list_missions(module)
+            elif choice == "3":
+                _handle_assign_mission_member(module)
+            elif choice == "4":
+                _handle_start_mission(module)
+            elif choice == "5":
+                _handle_complete_mission(module)
+            elif choice == "0":
+                return
+            else:
+                print("Invalid choice. Please select 0, 1, 2, 3, 4, or 5.")
+        except ValueError as error:
+            print(f"Error: {error}")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -759,6 +857,7 @@ def main(argv: list[str] | None = None) -> int:
     registration = RegistrationModule(store)
     crew_management = CrewManagementModule(store)
     inventory = InventoryModule(store)
+    mission_planning = MissionPlanningModule(store)
     race_management = RaceManagementModule(store)
     results = ResultsModule(store)
 
@@ -779,10 +878,12 @@ def main(argv: list[str] | None = None) -> int:
                 _run_race_management_tui(race_management)
             elif choice == "5":
                 _run_results_tui(results)
+            elif choice == "6":
+                _run_mission_tui(mission_planning)
             elif choice == "0":
                 print("Exiting StreetRace Manager.")
                 return 0
             else:
-                print("Invalid choice. Please select 0, 1, 2, 3, 4, or 5.")
+                print("Invalid choice. Please select 0, 1, 2, 3, 4, 5, or 6.")
         except ValueError as error:
             print(f"Error: {error}")

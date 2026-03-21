@@ -1,0 +1,52 @@
+{
+  "crew_members": [
+    {
+      "name": "Mia",
+      "role": "strategist"
+    },
+    {
+      "name": "Tej",
+      "role": "mechanic"
+    }
+  ],
+  "role_skills": [
+    {
+      "member_name": "Mia",
+      "role": "strategist",
+      "skill_level": 4
+    },
+    {
+      "member_name": "Tej",
+      "role": "mechanic",
+      "skill_level": 5
+    }
+  ],
+  "cars": [],
+  "spare_parts": [],
+  "tools": [],
+  "cash_balance": 0.0,
+  "races": [],
+  "race_results": [],
+  "rankings": [],
+  "missions": [
+    {
+      "name": "RescueBeta",
+      "mission_type": "rescue",
+      "required_roles": [
+        "mechanic",
+        "strategist"
+      ],
+      "assigned_members": [
+        {
+          "member_name": "Tej",
+          "role": "mechanic"
+        },
+        {
+          "member_name": "Mia",
+          "role": "strategist"
+        }
+      ],
+      "status": "in_progress"
+    }
+  ]
+}

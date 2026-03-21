@@ -57,3 +57,12 @@ class DriverRanking:
     points: int
     races_run: int
     wins: int
+
+
+@dataclass(slots=True)
+class Mission:
+    name: str
+    mission_type: str
+    required_roles: list[str]
+    assigned_members: list[dict[str, str]]
+    status: str  # "planned", "in_progress", "completed"

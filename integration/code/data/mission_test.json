@@ -1,0 +1,43 @@
+{
+  "crew_members": [
+    {
+      "name": "Mia",
+      "role": "strategist"
+    },
+    {
+      "name": "1",
+      "role": "tej"
+    }
+  ],
+  "role_skills": [
+    {
+      "member_name": "Mia",
+      "role": "strategist",
+      "skill_level": 4
+    }
+  ],
+  "cars": [],
+  "spare_parts": [],
+  "tools": [],
+  "cash_balance": 0.0,
+  "races": [],
+  "race_results": [],
+  "rankings": [],
+  "missions": [
+    {
+      "name": "RescueAlpha",
+      "mission_type": "rescue",
+      "required_roles": [
+        "mechanic",
+        "strategist"
+      ],
+      "assigned_members": [
+        {
+          "member_name": "Mia",
+          "role": "strategist"
+        }
+      ],
+      "status": "planned"
+    }
+  ]
+}
