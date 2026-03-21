@@ -1,0 +1,274 @@
+# QuickCart API Black-Box Testing Report
+
+## 1) Scope and Approach
+
+- **System under test**: QuickCart REST API (`http://localhost:8080/api/v1`)
+- **Method**: Black-box testing from API documentation + exploratory testing
+- **Automation tools**: `pytest`, `requests`
+- **Auth model tested**:
+	- `X-Roll-Number` required for all endpoints
+	- `X-User-ID` required for user-scoped endpoints
+
+This report combines:
+1. Manual exploration findings from `exploration.txt`
+2. Automated execution results from `pytest tests/`
+
+---
+
+## 2) Test Case Design (as required by problem statement)
+
+Test cases were designed per endpoint to cover:
+
+- **Valid requests** (happy path)
+- **Invalid inputs**
+- **Missing fields**
+- **Wrong data types / wrong formats**
+- **Boundary values**
+
+### 2.1 Representative designed test cases
+
+| Endpoint | Test Input | Expected Output | Justification |
+|---|---|---|---|
+| `GET /products` | No query params | 200 + active products list | Baseline read operation |
+| `GET /products?search=Apple` | Search term | 200 + matching items | Search behavior correctness |
+| `POST /cart/add` | `{product_id:1, quantity:2}` | 200/201 + item in cart + correct subtotal | Core cart behavior |
+| `POST /cart/add` | `{product_id:1, quantity:0}` | 400 | Lower boundary validation (`quantity >= 1`) |
+| `POST /cart/add` | `{product_id:1, quantity:-1}` | 400 | Invalid negative input |
+| `POST /checkout` | `{payment_method:"UPI"}` | 400 | Enum validation (`COD/WALLET/CARD`) |
+| `POST /checkout` | empty body | 400 | Missing required field (`payment_method`) |
+| `POST /addresses` | valid address fields | 200/201 + created address | CRUD happy path |
+| `POST /addresses` | invalid pincode length | 400 | Boundary/format validation |
+| `PUT /profile` | `name="A"` | 400 | Name min-length boundary |
+| `PUT /profile` | 51-char name | 400 | Name max-length boundary |
+| `PUT /profile` | phone with letters | 400 | Type/format validation |
+| `POST /wallet/add` | `amount=0` | 400 | Lower boundary validation |
+| `POST /wallet/add` | `amount=100001` | 400 | Upper boundary validation |
+| `POST /loyalty/redeem` | points > available | 400 | Business-rule validation |
+| `POST /products/{id}/reviews` | rating=0 or 6 | 400 | Rating range boundaries |
+| `POST /support/ticket` | subject too short | 400 | Input length validation |
+
+> Full automated list implemented across test files in `blackbox/tests/`.
+
+---
+
+## 3) Automated Test Execution Summary
+
+### 3.1 Run details
+
+- Command: `pytest tests/`
+- Collected: **164 tests**
+- Result: **123 passed, 41 failed**
+- Runtime: **41.45s**
+
+### 3.2 What the suite verifies
+
+- Correct HTTP status codes
+- Proper JSON response structures
+- Correctness of returned data against API documentation
+- Validation logic for boundaries and invalid input
+- Key business rules (cart, checkout, wallet, order cancellation, coupons, reviews)
+
+---
+
+## 4) Correlation: Manual exploration bugs vs automated outcomes
+
+### 4.1 Manual bugs confirmed by automated failures
+
+1. **BUG #001 – Cart subtotal/total inconsistency**
+	 - `test_cart_total_is_sum_of_subtotals` failed (`120 != 200`)
+2. **BUG #007 – Stock not restored on cancellation**
+	 - `test_cancel_restores_stock` failed
+3. **BUG #008 – Pincode validation inverted**
+	 - Valid 6-digit create failed; invalid 5-digit accepted
+4. **BUG #010 – Review validation gaps (partially)**
+	 - Missing rating accepted (`test_add_review_missing_rating_returns_400` failed)
+
+### 4.2 Manual bugs that are present but not counted as failing tests in this run
+
+These were intentionally written in “document bug without failing” style in parts of the suite:
+
+- **BUG #002** COD > 5000 allowed
+- **BUG #003** wallet checkout with insufficient balance
+- **BUG #004** delivered order cancellable
+- **BUG #005** GST formula mismatch
+- **BUG #006** wallet deduction issues
+
+### 4.3 Additional observations from failing tests (beyond initial manual list)
+
+- **Response schema mismatches** (test expected keys vs API actual keys):
+	- Wallet uses `wallet_balance` instead of `balance`
+	- Loyalty uses `loyalty_points` instead of `points`
+	- Orders use `total_amount` / `order_status` instead of `total` / `status`
+	- Some write endpoints return message-only payloads, not full updated object
+- **Potential behavioral issues additionally indicated**:
+	- Invalid user id returning 404 instead of documented 400
+	- Cart accepts quantity 0 / negative in add flow
+	- Expired coupon accepted
+	- Inactive product visible in product detail endpoint
+	- Review GET for non-existent product returns 200
+	- Support message appears truncated
+
+---
+
+## 5) Bug Reports (required format)
+
+Below are the consolidated bug reports from exploration + automated evidence.
+
+---
+
+### Bug 001: Cart subtotal/total calculation error
+
+- **Endpoint tested**: `POST /api/v1/cart/add`, `GET /api/v1/cart`
+- **Request payload**:
+	- Method: `POST`
+	- URL: `/api/v1/cart/add`
+	- Headers: `X-Roll-Number: 12345`, `X-User-ID: 1`
+	- Body: `{"product_id":1,"quantity":2}`
+- **Expected result**: subtotal = `2 * 120 = 240`, cart total = sum of all subtotals
+- **Actual result observed**:
+	- exploratory: subtotal `-16`, total `0`
+	- automated: cart total mismatch (`120 != 200`) in multi-item cart
+
+---
+
+### Bug 002: COD allowed for totals above ₹5000
+
+- **Endpoint tested**: `POST /api/v1/checkout`
+- **Request payload**:
+	- Method: `POST`
+	- URL: `/api/v1/checkout`
+	- Headers: `X-Roll-Number: 12345`, `X-User-ID: 1`
+	- Body: `{"payment_method":"COD"}` with cart total > 5000
+- **Expected result**: 400 error (COD disallowed above threshold)
+- **Actual result observed**: order still created (documented in exploration)
+
+---
+
+### Bug 003: WALLET checkout allows insufficient balance
+
+- **Endpoint tested**: `POST /api/v1/checkout`
+- **Request payload**:
+	- Method: `POST`
+	- URL: `/api/v1/checkout`
+	- Headers: `X-Roll-Number: 12345`, `X-User-ID: 1`
+	- Body: `{"payment_method":"WALLET"}` with cart total > wallet balance
+- **Expected result**: 400 insufficient balance
+- **Actual result observed**: order created / no rejection (exploration)
+
+---
+
+### Bug 004: Delivered orders can be cancelled
+
+- **Endpoint tested**: `POST /api/v1/orders/{order_id}/cancel`
+- **Request payload**:
+	- Method: `POST`
+	- URL: `/api/v1/orders/2038/cancel`
+	- Headers: `X-Roll-Number: 12345`, `X-User-ID: 1`
+	- Body: none
+- **Expected result**: 400 cannot cancel delivered order
+- **Actual result observed**: cancellation succeeds (exploration)
+
+---
+
+### Bug 005: GST calculation mismatch
+
+- **Endpoint tested**: `GET /api/v1/orders/{order_id}/invoice`
+- **Request payload**:
+	- Method: `GET`
+	- URL: `/api/v1/orders/1209/invoice`
+	- Headers: `X-Roll-Number: 12345`, `X-User-ID: 1`
+	- Body: none
+- **Expected result**: GST = 5% of subtotal
+- **Actual result observed**: GST behaves as subtotal/19 (~5.263%)
+
+---
+
+### Bug 006: Wallet amount not deducted correctly on wallet payment
+
+- **Endpoint tested**: `POST /api/v1/wallet/pay` and wallet checkout flows
+- **Request payload**:
+	- Method: `POST`
+	- URL: `/api/v1/wallet/pay`
+	- Headers: `X-Roll-Number: 12345`, `X-User-ID: 1`
+	- Body: `{"amount":42}`
+- **Expected result**: wallet reduces by exact paid amount
+- **Actual result observed**: balance unchanged in exploration scenarios
+
+---
+
+### Bug 007: Stock restoration inconsistent on cancellation
+
+- **Endpoint tested**: `POST /api/v1/orders/{order_id}/cancel`
+- **Request payload**:
+	- Method: `POST`
+	- URL: `/api/v1/orders/{order_id}/cancel`
+	- Headers: `X-Roll-Number: 12345`, `X-User-ID: 1`
+	- Body: none
+- **Expected result**: canceled quantity restored to inventory
+- **Actual result observed**: stock remains lower than expected (automated fail + exploration)
+
+---
+
+### Bug 008: Pincode validation inverted
+
+- **Endpoint tested**: `POST /api/v1/addresses`
+- **Request payload**:
+	- Method: `POST`
+	- URL: `/api/v1/addresses`
+	- Headers: `X-Roll-Number: 12345`, `X-User-ID: 1`
+	- Body A: valid 6-digit pincode (`"560001"`)
+	- Body B: invalid 5-digit pincode (`"56000"`)
+- **Expected result**:
+	- Body A accepted
+	- Body B rejected (400)
+- **Actual result observed**:
+	- Body A rejected (400)
+	- Body B accepted (200)
+
+---
+
+### Bug 009: Address ID sequence jump
+
+- **Endpoint tested**: `POST /api/v1/addresses`
+- **Request payload**:
+	- Method: `POST`
+	- URL: `/api/v1/addresses`
+	- Headers: `X-Roll-Number: 12345`, `X-User-ID: 1`
+	- Body: valid address payload
+- **Expected result**: sequential next ID
+- **Actual result observed**: jump to high range (e.g., 1001)
+
+---
+
+### Bug 010: Review validation gaps
+
+- **Endpoint tested**: `POST /api/v1/products/{product_id}/reviews`
+- **Request payload**:
+	- Method: `POST`
+	- URL: `/api/v1/products/16/reviews`
+	- Headers: `X-Roll-Number: 12345`, `X-User-ID: 1`
+	- Body A: `{"rating":0,"comment":"Bad"}`
+	- Body B: `{"rating":6,"comment":"Great"}`
+	- Body C: `{"comment":"Good product"}` (missing rating)
+- **Expected result**: 400 for invalid/missing rating
+- **Actual result observed**: invalid/missing rating accepted in observed runs
+
+---
+
+## 6) Overall Conclusion
+
+- The automated suite successfully validated a broad set of API behaviors and surfaced both:
+	1. **Documented business-logic bugs** from exploration
+	2. **Contract/schema mismatches** between expected and actual API payloads
+- Current state indicates significant issues in cart/checkout/financial and validation flows.
+- Priority should be to fix critical business bugs first (cart math, wallet checks/deduction, COD threshold, cancellation rules, GST logic), then align response schemas/documentation.
+
+---
+
+## 7) Appendix: Test Run Snapshot
+
+- Total tests: 164
+- Passed: 123
+- Failed: 41
+- Command used: `pytest tests/`
+
