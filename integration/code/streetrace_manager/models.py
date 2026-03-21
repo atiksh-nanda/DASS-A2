@@ -40,3 +40,20 @@ class Race:
     driver_name: str
     car_name: str
     status: str  # "planned", "in_progress", "completed"
+
+
+@dataclass(slots=True)
+class RaceResult:
+    race_name: str
+    driver_name: str
+    position: int
+    prize_money: float
+    car_damaged: bool
+
+
+@dataclass(slots=True)
+class DriverRanking:
+    driver_name: str
+    points: int
+    races_run: int
+    wins: int

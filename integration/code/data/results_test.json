@@ -1,0 +1,51 @@
+{
+  "crew_members": [
+    {
+      "name": "Dom",
+      "role": "driver"
+    }
+  ],
+  "role_skills": [
+    {
+      "member_name": "Dom",
+      "role": "driver",
+      "skill_level": 5
+    }
+  ],
+  "cars": [
+    {
+      "name": "Skyline",
+      "model": "Nissan",
+      "status": "available"
+    }
+  ],
+  "spare_parts": [],
+  "tools": [],
+  "cash_balance": 2500.0,
+  "races": [
+    {
+      "name": "NightDash",
+      "location": "Downtown",
+      "driver_name": "Dom",
+      "car_name": "Skyline",
+      "status": "completed"
+    }
+  ],
+  "race_results": [
+    {
+      "race_name": "NightDash",
+      "driver_name": "Dom",
+      "position": 1,
+      "prize_money": 2500.0,
+      "car_damaged": false
+    }
+  ],
+  "rankings": [
+    {
+      "driver_name": "Dom",
+      "points": 10,
+      "races_run": 1,
+      "wins": 1
+    }
+  ]
+}

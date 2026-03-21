@@ -1,0 +1,51 @@
+{
+  "crew_members": [
+    {
+      "name": "Letty",
+      "role": "driver"
+    }
+  ],
+  "role_skills": [
+    {
+      "member_name": "Letty",
+      "role": "driver",
+      "skill_level": 4
+    }
+  ],
+  "cars": [
+    {
+      "name": "Eclipse",
+      "model": "Mitsubishi",
+      "status": "damaged"
+    }
+  ],
+  "spare_parts": [],
+  "tools": [],
+  "cash_balance": 1200.0,
+  "races": [
+    {
+      "name": "DockRun",
+      "location": "Harbor",
+      "driver_name": "Letty",
+      "car_name": "Eclipse",
+      "status": "completed"
+    }
+  ],
+  "race_results": [
+    {
+      "race_name": "DockRun",
+      "driver_name": "Letty",
+      "position": 2,
+      "prize_money": 1200.0,
+      "car_damaged": true
+    }
+  ],
+  "rankings": [
+    {
+      "driver_name": "Letty",
+      "points": 6,
+      "races_run": 1,
+      "wins": 0
+    }
+  ]
+}

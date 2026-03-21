@@ -7,6 +7,7 @@ from streetrace_manager.registration import RegistrationModule
 from streetrace_manager.crew_management import CrewManagementModule
 from streetrace_manager.inventory import InventoryModule
 from streetrace_manager.race_management import RaceManagementModule
+from streetrace_manager.results import ResultsModule
 from streetrace_manager.storage import JsonStore
 
 
@@ -31,6 +32,7 @@ def _print_main_menu() -> None:
     print("2) Crew Management Module")
     print("3) Inventory Module")
     print("4) Race Management Module")
+    print("5) Results Module")
     print("0) Exit")
 
 
@@ -660,6 +662,95 @@ def _run_race_management_tui(module: RaceManagementModule) -> None:
             print(f"Error: {error}")
 
 
+def _print_results_menu() -> None:
+    print("\nResults Module:")
+    print("1) Record race result")
+    print("2) List race results")
+    print("3) Show driver rankings")
+    print("0) Back to main menu")
+
+
+def _handle_record_result(module: ResultsModule) -> None:
+    race_name = input("Enter race name: ").strip()
+    driver_name = input("Enter driver name: ").strip()
+
+    try:
+        position = int(input("Enter finishing position: "))
+    except ValueError:
+        print("Error: Position must be a number.")
+        return
+
+    try:
+        prize_money = float(input("Enter prize money: $"))
+    except ValueError:
+        print("Error: Prize money must be a number.")
+        return
+
+    damaged_input = input("Was car damaged? (y/n): ").strip().lower()
+    car_damaged = damaged_input in {"y", "yes"}
+
+    result = module.record_result(
+        race_name=race_name,
+        driver_name=driver_name,
+        position=position,
+        prize_money=prize_money,
+        car_damaged=car_damaged,
+    )
+    print(
+        f"Recorded result: {result.race_name} | Driver: {result.driver_name} | "
+        f"Position: {result.position} | Prize: ${result.prize_money:.2f}"
+    )
+
+
+def _handle_list_results(module: ResultsModule) -> None:
+    results = list(module.list_results())
+    if not results:
+        print("No race results recorded.")
+        return
+
+    print("\nRace results:")
+    for index, result in enumerate(results, start=1):
+        damage_text = "damaged" if result.car_damaged else "ok"
+        print(
+            f"{index}. {result.race_name} | {result.driver_name} | "
+            f"Pos {result.position} | Prize ${result.prize_money:.2f} | Car {damage_text}"
+        )
+
+
+def _handle_show_rankings(module: ResultsModule) -> None:
+    rankings = list(module.list_rankings())
+    if not rankings:
+        print("No rankings available.")
+        return
+
+    print("\nDriver rankings:")
+    for index, ranking in enumerate(rankings, start=1):
+        print(
+            f"{index}. {ranking.driver_name} | Points: {ranking.points} | "
+            f"Races: {ranking.races_run} | Wins: {ranking.wins}"
+        )
+
+
+def _run_results_tui(module: ResultsModule) -> None:
+    while True:
+        _print_results_menu()
+        choice = input("Select option: ").strip()
+
+        try:
+            if choice == "1":
+                _handle_record_result(module)
+            elif choice == "2":
+                _handle_list_results(module)
+            elif choice == "3":
+                _handle_show_rankings(module)
+            elif choice == "0":
+                return
+            else:
+                print("Invalid choice. Please select 0, 1, 2, or 3.")
+        except ValueError as error:
+            print(f"Error: {error}")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -669,6 +760,7 @@ def main(argv: list[str] | None = None) -> int:
     crew_management = CrewManagementModule(store)
     inventory = InventoryModule(store)
     race_management = RaceManagementModule(store)
+    results = ResultsModule(store)
 
     _print_header()
 
@@ -685,10 +777,12 @@ def main(argv: list[str] | None = None) -> int:
                 _run_inventory_tui(inventory)
             elif choice == "4":
                 _run_race_management_tui(race_management)
+            elif choice == "5":
+                _run_results_tui(results)
             elif choice == "0":
                 print("Exiting StreetRace Manager.")
                 return 0
             else:
-                print("Invalid choice. Please select 0, 1, 2, 3, or 4.")
+                print("Invalid choice. Please select 0, 1, 2, 3, 4, or 5.")
         except ValueError as error:
             print(f"Error: {error}")
