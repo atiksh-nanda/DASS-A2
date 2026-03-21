@@ -19,6 +19,7 @@ class JsonStore:
                 "spare_parts": [],
                 "tools": [],
                 "cash_balance": 0.0,
+                "races": [],
             }
 
         with self.path.open("r", encoding="utf-8") as file:
@@ -36,6 +37,8 @@ class JsonStore:
             data["tools"] = []
         if "cash_balance" not in data:
             data["cash_balance"] = 0.0
+        if "races" not in data or not isinstance(data["races"], list):
+            data["races"] = []
 
         return data
 

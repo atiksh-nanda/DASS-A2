@@ -31,3 +31,12 @@ class SparePart:
 class Tool:
     name: str
     quantity: int
+
+
+@dataclass(slots=True)
+class Race:
+    name: str
+    location: str
+    driver_name: str
+    car_name: str
+    status: str  # "planned", "in_progress", "completed"

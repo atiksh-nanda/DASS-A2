@@ -6,6 +6,7 @@ from pathlib import Path
 from streetrace_manager.registration import RegistrationModule
 from streetrace_manager.crew_management import CrewManagementModule
 from streetrace_manager.inventory import InventoryModule
+from streetrace_manager.race_management import RaceManagementModule
 from streetrace_manager.storage import JsonStore
 
 
@@ -29,6 +30,7 @@ def _print_main_menu() -> None:
     print("1) Registration Module")
     print("2) Crew Management Module")
     print("3) Inventory Module")
+    print("4) Race Management Module")
     print("0) Exit")
 
 
@@ -561,6 +563,103 @@ def _run_inventory_tui(module: InventoryModule) -> None:
             print(f"Error: {error}")
 
 
+def _print_race_management_menu() -> None:
+    print("\nRace Management Module:")
+    print("1) Create race")
+    print("2) List all races")
+    print("3) List races by status")
+    print("4) Update race status")
+    print("5) Remove race")
+    print("0) Back to main menu")
+
+
+def _handle_create_race(module: RaceManagementModule) -> None:
+    name = input("Enter race name: ").strip()
+    location = input("Enter race location: ").strip()
+    driver_name = input("Enter driver name: ").strip()
+    car_name = input("Enter car name: ").strip()
+
+    race = module.create_race(name=name, location=location, driver_name=driver_name, car_name=car_name)
+    print(
+        f"Race created: {race.name} at {race.location} | "
+        f"Driver: {race.driver_name} | Car: {race.car_name} | Status: {race.status}"
+    )
+
+
+def _handle_list_races(module: RaceManagementModule) -> None:
+    races = list(module.list_races())
+    if not races:
+        print("No races found.")
+        return
+
+    print("\nAll races:")
+    for index, race in enumerate(races, start=1):
+        print(
+            f"{index}. {race.name} ({race.location}) | "
+            f"Driver: {race.driver_name} | Car: {race.car_name} | Status: {race.status}"
+        )
+
+
+def _handle_list_races_by_status(module: RaceManagementModule) -> None:
+    status = input("Enter status to filter (planned/in_progress/completed): ").strip()
+    races = list(module.list_races(status=status))
+    if not races:
+        print(f"No races found with status '{status}'.")
+        return
+
+    print(f"\nRaces with status '{status}':")
+    for index, race in enumerate(races, start=1):
+        print(
+            f"{index}. {race.name} ({race.location}) | "
+            f"Driver: {race.driver_name} | Car: {race.car_name}"
+        )
+
+
+def _handle_update_race_status(module: RaceManagementModule) -> None:
+    race_name = input("Enter race name: ").strip()
+    new_status = input("Enter new status (planned/in_progress/completed): ").strip()
+
+    updated = module.update_race_status(race_name=race_name, new_status=new_status)
+    if updated:
+        print(f"Updated race '{race_name}' to status '{new_status}'.")
+    else:
+        print(f"Race not found: {race_name}")
+
+
+def _handle_remove_race(module: RaceManagementModule) -> None:
+    race_name = input("Enter race name to remove: ").strip()
+    removed = module.remove_race(race_name=race_name)
+    if removed:
+        print(f"Removed race: {race_name}")
+    else:
+        print(f"Race not found: {race_name}")
+
+
+def _run_race_management_tui(module: RaceManagementModule) -> None:
+    """Run race management module submenu."""
+    while True:
+        _print_race_management_menu()
+        choice = input("Select option: ").strip()
+
+        try:
+            if choice == "1":
+                _handle_create_race(module)
+            elif choice == "2":
+                _handle_list_races(module)
+            elif choice == "3":
+                _handle_list_races_by_status(module)
+            elif choice == "4":
+                _handle_update_race_status(module)
+            elif choice == "5":
+                _handle_remove_race(module)
+            elif choice == "0":
+                return  # Back to main menu
+            else:
+                print("Invalid choice. Please select a valid option.")
+        except ValueError as error:
+            print(f"Error: {error}")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -569,6 +668,7 @@ def main(argv: list[str] | None = None) -> int:
     registration = RegistrationModule(store)
     crew_management = CrewManagementModule(store)
     inventory = InventoryModule(store)
+    race_management = RaceManagementModule(store)
 
     _print_header()
 
@@ -583,10 +683,12 @@ def main(argv: list[str] | None = None) -> int:
                 _run_crew_management_tui(crew_management)
             elif choice == "3":
                 _run_inventory_tui(inventory)
+            elif choice == "4":
+                _run_race_management_tui(race_management)
             elif choice == "0":
                 print("Exiting StreetRace Manager.")
                 return 0
             else:
-                print("Invalid choice. Please select 0, 1, 2, or 3.")
+                print("Invalid choice. Please select 0, 1, 2, 3, or 4.")
         except ValueError as error:
             print(f"Error: {error}")

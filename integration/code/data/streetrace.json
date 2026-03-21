@@ -1,3 +1,20 @@
 {
-  "crew_members": []
+  "crew_members": [],
+  "role_skills": [],
+  "cars": [
+    {
+      "name": "Mustang",
+      "model": "Ford",
+      "status": "available"
+    },
+    {
+      "name": "fiesta",
+      "model": "ford",
+      "status": "available"
+    }
+  ],
+  "spare_parts": [],
+  "tools": [],
+  "cash_balance": 0.0,
+  "races": []
 }

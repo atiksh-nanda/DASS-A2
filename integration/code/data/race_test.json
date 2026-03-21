@@ -1,0 +1,43 @@
+{
+  "crew_members": [
+    {
+      "name": "Dom",
+      "role": "driver"
+    },
+    {
+      "name": "Mechanic1",
+      "role": "mechanic"
+    }
+  ],
+  "role_skills": [
+    {
+      "member_name": "Dom",
+      "role": "driver",
+      "skill_level": 3
+    }
+  ],
+  "cars": [
+    {
+      "name": "FastCar",
+      "model": "Ferrari",
+      "status": "available"
+    },
+    {
+      "name": "BrokenCar",
+      "model": "Broken",
+      "status": "damaged"
+    }
+  ],
+  "spare_parts": [],
+  "tools": [],
+  "cash_balance": 0.0,
+  "races": [
+    {
+      "name": "CityGrand",
+      "location": "City",
+      "driver_name": "Dom",
+      "car_name": "FastCar",
+      "status": "planned"
+    }
+  ]
+}
