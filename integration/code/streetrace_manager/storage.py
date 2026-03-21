@@ -12,13 +12,15 @@ class JsonStore:
 
     def read(self) -> dict[str, Any]:
         if not self.path.exists():
-            return {"crew_members": []}
+            return {"crew_members": [], "role_skills": []}
 
         with self.path.open("r", encoding="utf-8") as file:
             data = json.load(file)
 
         if "crew_members" not in data or not isinstance(data["crew_members"], list):
             data["crew_members"] = []
+        if "role_skills" not in data or not isinstance(data["role_skills"], list):
+            data["role_skills"] = []
 
         return data
 

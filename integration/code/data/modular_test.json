@@ -1,0 +1,15 @@
+{
+  "crew_members": [
+    {
+      "name": "Dom",
+      "role": "driver"
+    }
+  ],
+  "role_skills": [
+    {
+      "member_name": "Dom",
+      "role": "driver",
+      "skill_level": 3
+    }
+  ]
+}
