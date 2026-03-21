@@ -12,7 +12,14 @@ class JsonStore:
 
     def read(self) -> dict[str, Any]:
         if not self.path.exists():
-            return {"crew_members": [], "role_skills": []}
+            return {
+                "crew_members": [],
+                "role_skills": [],
+                "cars": [],
+                "spare_parts": [],
+                "tools": [],
+                "cash_balance": 0.0,
+            }
 
         with self.path.open("r", encoding="utf-8") as file:
             data = json.load(file)
@@ -21,6 +28,14 @@ class JsonStore:
             data["crew_members"] = []
         if "role_skills" not in data or not isinstance(data["role_skills"], list):
             data["role_skills"] = []
+        if "cars" not in data or not isinstance(data["cars"], list):
+            data["cars"] = []
+        if "spare_parts" not in data or not isinstance(data["spare_parts"], list):
+            data["spare_parts"] = []
+        if "tools" not in data or not isinstance(data["tools"], list):
+            data["tools"] = []
+        if "cash_balance" not in data:
+            data["cash_balance"] = 0.0
 
         return data
 

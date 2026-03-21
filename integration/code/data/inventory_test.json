@@ -1,0 +1,24 @@
+{
+  "crew_members": [],
+  "role_skills": [],
+  "cars": [
+    {
+      "name": "FastCar",
+      "model": "Ferrari",
+      "status": "available"
+    }
+  ],
+  "spare_parts": [
+    {
+      "name": "Spark Plugs",
+      "quantity": 10
+    }
+  ],
+  "tools": [
+    {
+      "name": "Wrench",
+      "quantity": 5
+    }
+  ],
+  "cash_balance": 3500.0
+}

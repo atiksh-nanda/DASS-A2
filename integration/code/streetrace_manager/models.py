@@ -12,3 +12,22 @@ class RoleSkill:
     member_name: str
     role: str
     skill_level: int  # 1-5 scale
+
+
+@dataclass(slots=True)
+class Car:
+    name: str
+    model: str
+    status: str  # "available", "damaged", "in_use"
+
+
+@dataclass(slots=True)
+class SparePart:
+    name: str
+    quantity: int
+
+
+@dataclass(slots=True)
+class Tool:
+    name: str
+    quantity: int

@@ -5,6 +5,7 @@ from pathlib import Path
 
 from streetrace_manager.registration import RegistrationModule
 from streetrace_manager.crew_management import CrewManagementModule
+from streetrace_manager.inventory import InventoryModule
 from streetrace_manager.storage import JsonStore
 
 
@@ -27,6 +28,7 @@ def _print_main_menu() -> None:
     print("\nMain Menu:")
     print("1) Registration Module")
     print("2) Crew Management Module")
+    print("3) Inventory Module")
     print("0) Exit")
 
 
@@ -161,6 +163,404 @@ def _run_crew_management_tui(module: CrewManagementModule) -> None:
             print(f"Error: {error}")
 
 
+def _print_inventory_menu() -> None:
+    print("\nInventory Module:")
+    print("1) Add car")
+    print("2) List cars")
+    print("3) Update car status")
+    print("4) Remove car")
+    print("5) Add spare parts")
+    print("6) List spare parts")
+    print("7) Remove spare parts")
+    print("8) Add tools")
+    print("9) List tools")
+    print("10) Remove tools")
+    print("11) Check cash balance")
+    print("12) Add cash")
+    print("13) Deduct cash")
+    print("0) Back to main menu")
+
+
+def _handle_add_car(module: InventoryModule) -> None:
+    name = input("Enter car name: ").strip()
+    model = input("Enter car model: ").strip()
+    car = module.add_car(name=name, model=model)
+    print(f"Added car: {car.name} ({car.model}) - Status: {car.status}")
+
+
+def _handle_list_cars(module: InventoryModule) -> None:
+    cars = list(module.list_cars())
+    if not cars:
+        print("No cars in inventory.")
+        return
+
+    print("\nCars in inventory:")
+    for index, car in enumerate(cars, start=1):
+        print(f"{index}. {car.name} ({car.model}) - Status: {car.status}")
+
+
+def _handle_update_car_status(module: InventoryModule) -> None:
+    name = input("Enter car name: ").strip()
+    status = input("Enter new status (available/damaged/in_use): ").strip()
+    updated = module.update_car_status(name=name, status=status)
+    if updated:
+        print(f"Updated car status: {name} -> {status}")
+    else:
+        print(f"Car not found: {name}")
+
+
+def _handle_remove_car(module: InventoryModule) -> None:
+    name = input("Enter car name to remove: ").strip()
+    removed = module.remove_car(name=name)
+    if removed:
+        print(f"Removed car: {name}")
+    else:
+        print(f"Car not found: {name}")
+
+
+def _handle_add_spare_part(module: InventoryModule) -> None:
+    name = input("Enter spare part name: ").strip()
+    try:
+        quantity = int(input("Enter quantity: "))
+    except ValueError:
+        print("Error: Quantity must be a number.")
+        return
+
+    part = module.add_spare_part(name=name, quantity=quantity)
+    print(f"Added spare part: {part.name} (quantity: {part.quantity})")
+
+
+def _handle_list_spare_parts(module: InventoryModule) -> None:
+    parts = list(module.list_spare_parts())
+    if not parts:
+        print("No spare parts in inventory.")
+        return
+
+    print("\nSpare parts in inventory:")
+    for index, part in enumerate(parts, start=1):
+        print(f"{index}. {part.name} (qty: {part.quantity})")
+
+
+def _handle_remove_spare_part(module: InventoryModule) -> None:
+    name = input("Enter spare part name: ").strip()
+    try:
+        quantity = int(input("Enter quantity to remove: "))
+    except ValueError:
+        print("Error: Quantity must be a number.")
+        return
+
+    removed = module.remove_spare_part(name=name, quantity=quantity)
+    if removed:
+        print(f"Removed spare part: {name} (qty: {quantity})")
+    else:
+        print(f"Spare part not found: {name}")
+
+
+def _handle_add_tool(module: InventoryModule) -> None:
+    name = input("Enter tool name: ").strip()
+    try:
+        quantity = int(input("Enter quantity: "))
+    except ValueError:
+        print("Error: Quantity must be a number.")
+        return
+
+    tool = module.add_tool(name=name, quantity=quantity)
+    print(f"Added tool: {tool.name} (quantity: {tool.quantity})")
+
+
+def _handle_list_tools(module: InventoryModule) -> None:
+    tools = list(module.list_tools())
+    if not tools:
+        print("No tools in inventory.")
+        return
+
+    print("\nTools in inventory:")
+    for index, tool in enumerate(tools, start=1):
+        print(f"{index}. {tool.name} (qty: {tool.quantity})")
+
+
+def _handle_remove_tool(module: InventoryModule) -> None:
+    name = input("Enter tool name: ").strip()
+    try:
+        quantity = int(input("Enter quantity to remove: "))
+    except ValueError:
+        print("Error: Quantity must be a number.")
+        return
+
+    removed = module.remove_tool(name=name, quantity=quantity)
+    if removed:
+        print(f"Removed tool: {name} (qty: {quantity})")
+    else:
+        print(f"Tool not found: {name}")
+
+
+def _handle_check_balance(module: InventoryModule) -> None:
+    balance = module.get_cash_balance()
+    print(f"Current cash balance: ${balance:.2f}")
+
+
+def _handle_add_cash(module: InventoryModule) -> None:
+    try:
+        amount = float(input("Enter amount to add: $"))
+    except ValueError:
+        print("Error: Amount must be a number.")
+        return
+
+    balance = module.add_cash(amount=amount)
+    print(f"Added ${amount:.2f}. New balance: ${balance:.2f}")
+
+
+def _handle_deduct_cash(module: InventoryModule) -> None:
+    try:
+        amount = float(input("Enter amount to deduct: $"))
+    except ValueError:
+        print("Error: Amount must be a number.")
+        return
+
+    balance = module.deduct_cash(amount=amount)
+    print(f"Deducted ${amount:.2f}. New balance: ${balance:.2f}")
+
+
+def _run_inventory_tui(module: InventoryModule) -> None:
+    """Run inventory module submenu."""
+    while True:
+        _print_inventory_menu()
+        choice = input("Select option: ").strip()
+
+        try:
+            if choice == "1":
+                _handle_add_car(module)
+            elif choice == "2":
+                _handle_list_cars(module)
+            elif choice == "3":
+                _handle_update_car_status(module)
+            elif choice == "4":
+                _handle_remove_car(module)
+            elif choice == "5":
+                _handle_add_spare_part(module)
+            elif choice == "6":
+                _handle_list_spare_parts(module)
+            elif choice == "7":
+                _handle_remove_spare_part(module)
+            elif choice == "8":
+                _handle_add_tool(module)
+            elif choice == "9":
+                _handle_list_tools(module)
+            elif choice == "10":
+                _handle_remove_tool(module)
+            elif choice == "11":
+                _handle_check_balance(module)
+            elif choice == "12":
+                _handle_add_cash(module)
+            elif choice == "13":
+                _handle_deduct_cash(module)
+            elif choice == "0":
+                return  # Back to main menu
+            else:
+                print("Invalid choice. Please select a valid option.")
+        except ValueError as error:
+            print(f"Error: {error}")
+
+
+def _print_inventory_menu() -> None:
+    print("\nInventory Module:")
+    print("1) Add car")
+    print("2) List cars")
+    print("3) Update car status")
+    print("4) Remove car")
+    print("5) Add spare parts")
+    print("6) List spare parts")
+    print("7) Remove spare parts")
+    print("8) Add tools")
+    print("9) List tools")
+    print("10) Remove tools")
+    print("11) Check cash balance")
+    print("12) Add cash")
+    print("13) Deduct cash")
+    print("0) Back to main menu")
+
+
+def _handle_add_car(module: InventoryModule) -> None:
+    name = input("Enter car name: ").strip()
+    model = input("Enter car model: ").strip()
+    car = module.add_car(name=name, model=model)
+    print(f"Added car: {car.name} ({car.model}) - Status: {car.status}")
+
+
+def _handle_list_cars(module: InventoryModule) -> None:
+    cars = list(module.list_cars())
+    if not cars:
+        print("No cars in inventory.")
+        return
+
+    print("\nCars in inventory:")
+    for index, car in enumerate(cars, start=1):
+        print(f"{index}. {car.name} ({car.model}) - Status: {car.status}")
+
+
+def _handle_update_car_status(module: InventoryModule) -> None:
+    name = input("Enter car name: ").strip()
+    status = input("Enter new status (available/damaged/in_use): ").strip()
+    updated = module.update_car_status(name=name, status=status)
+    if updated:
+        print(f"Updated car status: {name} -> {status}")
+    else:
+        print(f"Car not found: {name}")
+
+
+def _handle_remove_car(module: InventoryModule) -> None:
+    name = input("Enter car name to remove: ").strip()
+    removed = module.remove_car(name=name)
+    if removed:
+        print(f"Removed car: {name}")
+    else:
+        print(f"Car not found: {name}")
+
+
+def _handle_add_spare_part(module: InventoryModule) -> None:
+    name = input("Enter spare part name: ").strip()
+    try:
+        quantity = int(input("Enter quantity: "))
+    except ValueError:
+        print("Error: Quantity must be a number.")
+        return
+
+    part = module.add_spare_part(name=name, quantity=quantity)
+    print(f"Added spare part: {part.name} (quantity: {part.quantity})")
+
+
+def _handle_list_spare_parts(module: InventoryModule) -> None:
+    parts = list(module.list_spare_parts())
+    if not parts:
+        print("No spare parts in inventory.")
+        return
+
+    print("\nSpare parts in inventory:")
+    for index, part in enumerate(parts, start=1):
+        print(f"{index}. {part.name} (qty: {part.quantity})")
+
+
+def _handle_remove_spare_part(module: InventoryModule) -> None:
+    name = input("Enter spare part name: ").strip()
+    try:
+        quantity = int(input("Enter quantity to remove: "))
+    except ValueError:
+        print("Error: Quantity must be a number.")
+        return
+
+    removed = module.remove_spare_part(name=name, quantity=quantity)
+    if removed:
+        print(f"Removed spare part: {name} (qty: {quantity})")
+    else:
+        print(f"Spare part not found: {name}")
+
+
+def _handle_add_tool(module: InventoryModule) -> None:
+    name = input("Enter tool name: ").strip()
+    try:
+        quantity = int(input("Enter quantity: "))
+    except ValueError:
+        print("Error: Quantity must be a number.")
+        return
+
+    tool = module.add_tool(name=name, quantity=quantity)
+    print(f"Added tool: {tool.name} (quantity: {tool.quantity})")
+
+
+def _handle_list_tools(module: InventoryModule) -> None:
+    tools = list(module.list_tools())
+    if not tools:
+        print("No tools in inventory.")
+        return
+
+    print("\nTools in inventory:")
+    for index, tool in enumerate(tools, start=1):
+        print(f"{index}. {tool.name} (qty: {tool.quantity})")
+
+
+def _handle_remove_tool(module: InventoryModule) -> None:
+    name = input("Enter tool name: ").strip()
+    try:
+        quantity = int(input("Enter quantity to remove: "))
+    except ValueError:
+        print("Error: Quantity must be a number.")
+        return
+
+    removed = module.remove_tool(name=name, quantity=quantity)
+    if removed:
+        print(f"Removed tool: {name} (qty: {quantity})")
+    else:
+        print(f"Tool not found: {name}")
+
+
+def _handle_check_balance(module: InventoryModule) -> None:
+    balance = module.get_cash_balance()
+    print(f"Current cash balance: ${balance:.2f}")
+
+
+def _handle_add_cash(module: InventoryModule) -> None:
+    try:
+        amount = float(input("Enter amount to add: $"))
+    except ValueError:
+        print("Error: Amount must be a number.")
+        return
+
+    balance = module.add_cash(amount=amount)
+    print(f"Added ${amount:.2f}. New balance: ${balance:.2f}")
+
+
+def _handle_deduct_cash(module: InventoryModule) -> None:
+    try:
+        amount = float(input("Enter amount to deduct: $"))
+    except ValueError:
+        print("Error: Amount must be a number.")
+        return
+
+    balance = module.deduct_cash(amount=amount)
+    print(f"Deducted ${amount:.2f}. New balance: ${balance:.2f}")
+
+
+def _run_inventory_tui(module: InventoryModule) -> None:
+    """Run inventory module submenu."""
+    while True:
+        _print_inventory_menu()
+        choice = input("Select option: ").strip()
+
+        try:
+            if choice == "1":
+                _handle_add_car(module)
+            elif choice == "2":
+                _handle_list_cars(module)
+            elif choice == "3":
+                _handle_update_car_status(module)
+            elif choice == "4":
+                _handle_remove_car(module)
+            elif choice == "5":
+                _handle_add_spare_part(module)
+            elif choice == "6":
+                _handle_list_spare_parts(module)
+            elif choice == "7":
+                _handle_remove_spare_part(module)
+            elif choice == "8":
+                _handle_add_tool(module)
+            elif choice == "9":
+                _handle_list_tools(module)
+            elif choice == "10":
+                _handle_remove_tool(module)
+            elif choice == "11":
+                _handle_check_balance(module)
+            elif choice == "12":
+                _handle_add_cash(module)
+            elif choice == "13":
+                _handle_deduct_cash(module)
+            elif choice == "0":
+                return  # Back to main menu
+            else:
+                print("Invalid choice. Please select a valid option.")
+        except ValueError as error:
+            print(f"Error: {error}")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -168,6 +568,7 @@ def main(argv: list[str] | None = None) -> int:
     store = JsonStore(path=args.data_file)
     registration = RegistrationModule(store)
     crew_management = CrewManagementModule(store)
+    inventory = InventoryModule(store)
 
     _print_header()
 
@@ -180,10 +581,12 @@ def main(argv: list[str] | None = None) -> int:
                 _run_registration_tui(registration)
             elif choice == "2":
                 _run_crew_management_tui(crew_management)
+            elif choice == "3":
+                _run_inventory_tui(inventory)
             elif choice == "0":
                 print("Exiting StreetRace Manager.")
                 return 0
             else:
-                print("Invalid choice. Please select 0, 1, or 2.")
+                print("Invalid choice. Please select 0, 1, 2, or 3.")
         except ValueError as error:
             print(f"Error: {error}")
