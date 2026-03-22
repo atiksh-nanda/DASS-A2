@@ -76,3 +76,16 @@ class VehicleRepair:
     spare_part_qty: int
     repair_cost: float
     status: str  # "completed"
+
+
+@dataclass(slots=True)
+class Reputation:
+    member_name: str
+    points: int
+
+
+@dataclass(slots=True)
+class ReputationLog:
+    member_name: str
+    change: int
+    reason: str

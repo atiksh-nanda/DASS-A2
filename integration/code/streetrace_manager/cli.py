@@ -7,6 +7,7 @@ from streetrace_manager.registration import RegistrationModule
 from streetrace_manager.crew_management import CrewManagementModule
 from streetrace_manager.inventory import InventoryModule
 from streetrace_manager.mission_planning import MissionPlanningModule
+from streetrace_manager.reputation import ReputationModule
 from streetrace_manager.race_management import RaceManagementModule
 from streetrace_manager.results import ResultsModule
 from streetrace_manager.storage import JsonStore
@@ -37,6 +38,7 @@ def _print_main_menu() -> None:
     print("5) Results Module")
     print("6) Mission Planning Module")
     print("7) Vehicle Repair Module")
+    print("8) Reputation Module")
     print("0) Exit")
 
 
@@ -921,6 +923,89 @@ def _run_vehicle_repair_tui(module: VehicleRepairModule) -> None:
             print(f"Error: {error}")
 
 
+def _print_reputation_menu() -> None:
+    print("\nReputation Module:")
+    print("1) Add reputation points")
+    print("2) Deduct reputation points")
+    print("3) List reputation standings")
+    print("4) List reputation logs")
+    print("0) Back to main menu")
+
+
+def _handle_add_reputation(module: ReputationModule) -> None:
+    member_name = input("Enter crew member name: ").strip()
+    reason = input("Enter reason: ").strip()
+
+    try:
+        points = int(input("Enter points to add: "))
+    except ValueError:
+        print("Error: Points must be a number.")
+        return
+
+    result = module.add_points(member_name=member_name, points=points, reason=reason)
+    print(f"Updated reputation: {result.member_name} now has {result.points} points.")
+
+
+def _handle_deduct_reputation(module: ReputationModule) -> None:
+    member_name = input("Enter crew member name: ").strip()
+    reason = input("Enter reason: ").strip()
+
+    try:
+        points = int(input("Enter points to deduct: "))
+    except ValueError:
+        print("Error: Points must be a number.")
+        return
+
+    result = module.deduct_points(member_name=member_name, points=points, reason=reason)
+    print(f"Updated reputation: {result.member_name} now has {result.points} points.")
+
+
+def _handle_list_reputation(module: ReputationModule) -> None:
+    standings = list(module.list_reputations())
+    if not standings:
+        print("No reputation records found.")
+        return
+
+    print("\nReputation standings:")
+    for index, item in enumerate(standings, start=1):
+        print(f"{index}. {item.member_name} - {item.points} points")
+
+
+def _handle_list_reputation_logs(module: ReputationModule) -> None:
+    member_name = input("Filter by member name (leave blank for all): ").strip()
+    logs = list(module.list_logs(member_name=member_name if member_name else None))
+    if not logs:
+        print("No reputation logs found.")
+        return
+
+    print("\nReputation logs:")
+    for index, log in enumerate(logs, start=1):
+        sign = "+" if log.change >= 0 else ""
+        print(f"{index}. {log.member_name} | {sign}{log.change} | {log.reason}")
+
+
+def _run_reputation_tui(module: ReputationModule) -> None:
+    while True:
+        _print_reputation_menu()
+        choice = input("Select option: ").strip()
+
+        try:
+            if choice == "1":
+                _handle_add_reputation(module)
+            elif choice == "2":
+                _handle_deduct_reputation(module)
+            elif choice == "3":
+                _handle_list_reputation(module)
+            elif choice == "4":
+                _handle_list_reputation_logs(module)
+            elif choice == "0":
+                return
+            else:
+                print("Invalid choice. Please select 0, 1, 2, 3, or 4.")
+        except ValueError as error:
+            print(f"Error: {error}")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -931,6 +1016,7 @@ def main(argv: list[str] | None = None) -> int:
     inventory = InventoryModule(store)
     mission_planning = MissionPlanningModule(store)
     race_management = RaceManagementModule(store)
+    reputation = ReputationModule(store)
     results = ResultsModule(store)
     vehicle_repair = VehicleRepairModule(store)
 
@@ -955,10 +1041,12 @@ def main(argv: list[str] | None = None) -> int:
                 _run_mission_tui(mission_planning)
             elif choice == "7":
                 _run_vehicle_repair_tui(vehicle_repair)
+            elif choice == "8":
+                _run_reputation_tui(reputation)
             elif choice == "0":
                 print("Exiting StreetRace Manager.")
                 return 0
             else:
-                print("Invalid choice. Please select 0, 1, 2, 3, 4, 5, 6, or 7.")
+                print("Invalid choice. Please select 0, 1, 2, 3, 4, 5, 6, 7, or 8.")
         except ValueError as error:
             print(f"Error: {error}")

@@ -1,0 +1,57 @@
+Vehicle Repair Module
+
+Purpose:
+- Repairs damaged cars using a mechanic, spare parts, and cash from inventory.
+
+Business Rules:
+- Car must exist and be in damaged status.
+- Mechanic must be registered and must have mechanic role assigned.
+- Spare part must exist with enough quantity.
+- Cash balance must be enough to cover repair cost.
+
+Effects after successful repair:
+- Car status changes from damaged to available.
+- Spare part quantity is reduced (and removed if quantity reaches 0).
+- Cash balance is reduced by repair cost.
+- Repair record is saved in vehicle repair history.
+
+TUI Access:
+- Main Menu -> 7) Vehicle Repair Module
+- 1) Repair damaged vehicle
+- 2) List repair records
+
+Inputs required for repair:
+- Damaged car name
+- Mechanic name
+- Spare part name
+- Spare part quantity
+- Repair cost
+
+
+Reputation Module
+
+Purpose:
+- Tracks each crew member's street reputation points and keeps a history log of changes.
+
+Business Rules:
+- Crew member must be registered before reputation can be changed.
+- Point change cannot be zero.
+- Reason is required for every reputation change.
+
+Features:
+- Add reputation points.
+- Deduct reputation points.
+- View reputation standings (sorted by highest points).
+- View reputation logs (all members or filtered by member name).
+
+TUI Access:
+- Main Menu -> 8) Reputation Module
+- 1) Add reputation points
+- 2) Deduct reputation points
+- 3) List reputation standings
+- 4) List reputation logs
+
+Inputs for reputation update:
+- Crew member name
+- Points value
+- Reason

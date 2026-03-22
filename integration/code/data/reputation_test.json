@@ -1,0 +1,36 @@
+{
+  "crew_members": [
+    {
+      "name": "Roman",
+      "role": "driver"
+    }
+  ],
+  "role_skills": [],
+  "cars": [],
+  "spare_parts": [],
+  "tools": [],
+  "cash_balance": 0.0,
+  "races": [],
+  "race_results": [],
+  "rankings": [],
+  "missions": [],
+  "vehicle_repairs": [],
+  "reputations": [
+    {
+      "member_name": "Roman",
+      "points": 10
+    }
+  ],
+  "reputation_logs": [
+    {
+      "member_name": "Roman",
+      "change": 15,
+      "reason": "Won downtown sprint"
+    },
+    {
+      "member_name": "Roman",
+      "change": -5,
+      "reason": "Got caught in traffic trap"
+    }
+  ]
+}
