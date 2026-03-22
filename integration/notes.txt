@@ -55,3 +55,236 @@ Inputs for reputation update:
 - Crew member name
 - Points value
 - Reason
+
+
+2.2 Integration Test Design
+
+Test location:
+- integration/tests/test_integration_design.py
+
+Test run command:
+- python3 -m pytest -q tests/test_integration_design.py
+
+Actual test run summary:
+- 14 passed in 0.10s
+
+Why integration testing is needed:
+- Unit tests check one module at a time, but this project depends on data moving correctly across modules.
+- Integration tests confirm business rules are enforced when modules are used together.
+- They also verify side effects (cash updates, status changes, ranking changes, and validation errors).
+
+
+Test Case 1: Registering a driver and then entering the driver into a race
+- Scenario tested:
+	Register a crew member, assign driver role, add a car, then create a race.
+- Modules involved:
+	Registration, Crew Management, Inventory, Race Management
+- Expected result:
+	Race is created with status "planned" for the selected registered driver and available car.
+- Actual result:
+	PASS. Race created successfully with correct driver, car, and planned status.
+- Errors or logical issues found:
+	None.
+- Why this test is needed (simple):
+	It proves the main race-entry flow works across multiple modules, not just in isolation.
+
+
+Test Case 2: Attempting to enter a race without a registered driver
+- Scenario tested:
+	Add a car but try to create a race using a non-registered driver.
+- Modules involved:
+	Inventory, Race Management, Registration (validated indirectly)
+- Expected result:
+	Race creation fails with validation error that driver is not registered.
+- Actual result:
+	PASS. Correct ValueError raised ("not registered").
+- Errors or logical issues found:
+	None; validation worked as intended.
+- Why this test is needed (simple):
+	It checks that invalid race entries are blocked, preserving data correctness.
+
+
+Test Case 3: Completing a race and verifying results + prize money update inventory
+- Scenario tested:
+	Create a valid race, record result, then check cash balance, race status, and ranking updates.
+- Modules involved:
+	Registration, Crew Management, Inventory, Race Management, Results
+- Expected result:
+	Result is recorded, race becomes completed, inventory cash increases by prize money, and ranking is updated.
+- Actual result:
+	PASS. Cash increased correctly, race status changed to completed, ranking points/wins updated.
+- Errors or logical issues found:
+	None.
+- Why this test is needed (simple):
+	It confirms financial and ranking side effects happen correctly after race completion.
+
+
+Test Case 4: Assigning a mission and validating required crew roles
+- Scenario tested:
+	Create mission requiring driver + mechanic, assign only driver, attempt start, then assign mechanic and retry.
+- Modules involved:
+	Registration, Crew Management, Mission Planning
+- Expected result:
+	First start attempt fails with missing mechanic role; second start succeeds after mechanic assignment.
+- Actual result:
+	PASS. First call returned missing role list; second call started mission successfully.
+- Errors or logical issues found:
+	Missing required role detected (expected validation), then fixed by assigning required mechanic.
+- Why this test is needed (simple):
+	It proves mission safety checks prevent starting incomplete teams.
+
+
+Test Case 5: Car damaged in race result, then repaired using mechanic + spare parts + cash
+- Scenario tested:
+	Record race result with car damage, then run vehicle repair using mechanic role, spare part quantity, and cash.
+- Modules involved:
+	Registration, Crew Management, Inventory, Race Management, Results, Vehicle Repair
+- Expected result:
+	Car changes to damaged after result, then back to available after repair; spare parts and cash are reduced; repair record saved.
+- Actual result:
+	PASS. Car status transitioned damaged -> available, spare part quantity reduced, cash adjusted correctly, repair saved.
+- Errors or logical issues found:
+	None.
+- Why this test is needed (simple):
+	It validates a full cross-module lifecycle from race damage to successful repair.
+
+
+Test Case 6: Reputation update requires registered crew member
+- Scenario tested:
+	Attempt to add points to unknown member, then register member and add points again.
+- Modules involved:
+	Registration, Reputation
+- Expected result:
+	First attempt fails with registration validation error; second attempt succeeds and points are stored.
+- Actual result:
+	PASS. Unregistered member rejected; registered member updated successfully.
+- Errors or logical issues found:
+	None; validation behaved correctly.
+- Why this test is needed (simple):
+	It ensures reputation data cannot be changed for invalid users.
+
+
+Test Case 7: Registered member without driver role cannot enter race
+- Scenario tested:
+	Register member and add car, but do not assign driver role before race creation.
+- Modules involved:
+	Registration, Inventory, Race Management, Crew Management (validated indirectly)
+- Expected result:
+	Race creation fails because member does not have driver role.
+- Actual result:
+	PASS. Correct ValueError raised (driver role missing).
+- Errors or logical issues found:
+	None; role validation worked correctly.
+- Why this test is needed (simple):
+	It confirms role assignment is mandatory before race entry.
+
+
+Test Case 8: Unavailable car cannot be used in race
+- Scenario tested:
+	Register valid driver and role, then set car status to damaged and try to create race.
+- Modules involved:
+	Registration, Crew Management, Inventory, Race Management
+- Expected result:
+	Race creation fails because car is not available.
+- Actual result:
+	PASS. Correct ValueError raised (car not available).
+- Errors or logical issues found:
+	None.
+- Why this test is needed (simple):
+	It prevents invalid race setup with unusable cars.
+
+
+Test Case 9: Duplicate race result recording is blocked
+- Scenario tested:
+	Record one race result successfully, then attempt to record result for same race again.
+- Modules involved:
+	Registration, Crew Management, Inventory, Race Management, Results
+- Expected result:
+	Second result entry fails as duplicate.
+- Actual result:
+	PASS. Correct ValueError raised (already recorded).
+- Errors or logical issues found:
+	None.
+- Why this test is needed (simple):
+	It protects result integrity and prevents double counting cash/ranking updates.
+
+
+Test Case 10: Result with wrong driver is blocked
+- Scenario tested:
+	Create race for Driver A, then try recording result using Driver B.
+- Modules involved:
+	Registration, Crew Management, Inventory, Race Management, Results
+- Expected result:
+	Result recording fails due to driver mismatch.
+- Actual result:
+	PASS. Correct ValueError raised (assigned driver mismatch).
+- Errors or logical issues found:
+	None.
+- Why this test is needed (simple):
+	It ensures race results are tied to the correct participant.
+
+
+Test Case 11: Vehicle repair requires registered mechanic
+- Scenario tested:
+	Create damaged car state, then attempt repair with unknown mechanic.
+- Modules involved:
+	Registration, Crew Management, Inventory, Race Management, Results, Vehicle Repair
+- Expected result:
+	Repair fails because mechanic is not registered.
+- Actual result:
+	PASS. Correct ValueError raised (mechanic not registered).
+- Errors or logical issues found:
+	None.
+- Why this test is needed (simple):
+	It enforces trusted personnel checks before repairs.
+
+
+Test Case 12: Vehicle repair requires mechanic role
+- Scenario tested:
+	Use a registered crew member without mechanic role to attempt repair.
+- Modules involved:
+	Registration, Crew Management, Inventory, Race Management, Results, Vehicle Repair
+- Expected result:
+	Repair fails because mechanic role is missing.
+- Actual result:
+	PASS. Correct ValueError raised (no mechanic role).
+- Errors or logical issues found:
+	None.
+- Why this test is needed (simple):
+	It enforces role-based access for repair operations.
+
+
+Test Case 13: Vehicle repair fails on insufficient parts and insufficient cash
+- Scenario tested:
+	Attempt repair with part quantity greater than stock, then attempt with excessive repair cost.
+- Modules involved:
+	Registration, Crew Management, Inventory, Race Management, Results, Vehicle Repair
+- Expected result:
+	First repair fails for part shortage; second fails for insufficient funds.
+- Actual result:
+	PASS. Both validations raised expected ValueError messages.
+- Errors or logical issues found:
+	None.
+- Why this test is needed (simple):
+	It verifies inventory and finance constraints are both enforced before repair.
+
+
+Test Case 14: Mission assignment role validation + reputation input validation
+- Scenario tested:
+	Assign member to mission with non-required role, then test zero-point and empty-reason reputation updates.
+- Modules involved:
+	Registration, Crew Management, Mission Planning, Reputation
+- Expected result:
+	Mission assignment fails for wrong role; reputation updates fail for invalid inputs.
+- Actual result:
+	PASS. All invalid operations were rejected with correct errors.
+- Errors or logical issues found:
+	None.
+- Why this test is needed (simple):
+	It confirms strict validation in two critical modules handling mission safety and audit quality.
+
+
+Issues detected and fixed during integration testing:
+- No implementation bugs were detected in this test run.
+- One intentional logical issue (missing mission role) was correctly detected by the system and resolved by assigning the missing role, confirming validation works.
+- Additional intentional negative scenarios (missing roles, wrong driver, unavailable car, insufficient parts/cash, invalid reputation inputs) were all correctly rejected by business-rule validations.
