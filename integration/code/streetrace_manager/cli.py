@@ -10,6 +10,7 @@ from streetrace_manager.mission_planning import MissionPlanningModule
 from streetrace_manager.race_management import RaceManagementModule
 from streetrace_manager.results import ResultsModule
 from streetrace_manager.storage import JsonStore
+from streetrace_manager.vehicle_repair import VehicleRepairModule
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -35,6 +36,7 @@ def _print_main_menu() -> None:
     print("4) Race Management Module")
     print("5) Results Module")
     print("6) Mission Planning Module")
+    print("7) Vehicle Repair Module")
     print("0) Exit")
 
 
@@ -849,6 +851,76 @@ def _run_mission_tui(module: MissionPlanningModule) -> None:
             print(f"Error: {error}")
 
 
+def _print_vehicle_repair_menu() -> None:
+    print("\nVehicle Repair Module:")
+    print("1) Repair damaged vehicle")
+    print("2) List repair records")
+    print("0) Back to main menu")
+
+
+def _handle_repair_vehicle(module: VehicleRepairModule) -> None:
+    car_name = input("Enter damaged car name: ").strip()
+    mechanic_name = input("Enter mechanic name: ").strip()
+    spare_part_name = input("Enter spare part to use: ").strip()
+
+    try:
+        spare_part_qty = int(input("Enter spare part quantity: "))
+    except ValueError:
+        print("Error: Spare part quantity must be a number.")
+        return
+
+    try:
+        repair_cost = float(input("Enter repair cost: $"))
+    except ValueError:
+        print("Error: Repair cost must be a number.")
+        return
+
+    repair = module.repair_vehicle(
+        car_name=car_name,
+        mechanic_name=mechanic_name,
+        spare_part_name=spare_part_name,
+        spare_part_qty=spare_part_qty,
+        repair_cost=repair_cost,
+    )
+    print(
+        f"Repair completed: Car {repair.car_name} | Mechanic {repair.mechanic_name} | "
+        f"Part {repair.spare_part_name} x{repair.spare_part_qty} | Cost ${repair.repair_cost:.2f}"
+    )
+
+
+def _handle_list_repairs(module: VehicleRepairModule) -> None:
+    repairs = list(module.list_repairs())
+    if not repairs:
+        print("No repair records found.")
+        return
+
+    print("\nVehicle repair records:")
+    for index, repair in enumerate(repairs, start=1):
+        print(
+            f"{index}. Car: {repair.car_name} | Mechanic: {repair.mechanic_name} | "
+            f"Part: {repair.spare_part_name} x{repair.spare_part_qty} | "
+            f"Cost: ${repair.repair_cost:.2f} | Status: {repair.status}"
+        )
+
+
+def _run_vehicle_repair_tui(module: VehicleRepairModule) -> None:
+    while True:
+        _print_vehicle_repair_menu()
+        choice = input("Select option: ").strip()
+
+        try:
+            if choice == "1":
+                _handle_repair_vehicle(module)
+            elif choice == "2":
+                _handle_list_repairs(module)
+            elif choice == "0":
+                return
+            else:
+                print("Invalid choice. Please select 0, 1, or 2.")
+        except ValueError as error:
+            print(f"Error: {error}")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -860,6 +932,7 @@ def main(argv: list[str] | None = None) -> int:
     mission_planning = MissionPlanningModule(store)
     race_management = RaceManagementModule(store)
     results = ResultsModule(store)
+    vehicle_repair = VehicleRepairModule(store)
 
     _print_header()
 
@@ -880,10 +953,12 @@ def main(argv: list[str] | None = None) -> int:
                 _run_results_tui(results)
             elif choice == "6":
                 _run_mission_tui(mission_planning)
+            elif choice == "7":
+                _run_vehicle_repair_tui(vehicle_repair)
             elif choice == "0":
                 print("Exiting StreetRace Manager.")
                 return 0
             else:
-                print("Invalid choice. Please select 0, 1, 2, 3, 4, 5, or 6.")
+                print("Invalid choice. Please select 0, 1, 2, 3, 4, 5, 6, or 7.")
         except ValueError as error:
             print(f"Error: {error}")

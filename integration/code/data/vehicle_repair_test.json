@@ -1,0 +1,44 @@
+{
+  "crew_members": [
+    {
+      "name": "Tej",
+      "role": "mechanic"
+    }
+  ],
+  "role_skills": [
+    {
+      "member_name": "Tej",
+      "role": "mechanic",
+      "skill_level": 5
+    }
+  ],
+  "cars": [
+    {
+      "name": "Rx7",
+      "model": "Mazda",
+      "status": "available"
+    }
+  ],
+  "spare_parts": [
+    {
+      "name": "Brake Pad",
+      "quantity": 2
+    }
+  ],
+  "tools": [],
+  "cash_balance": 700.0,
+  "races": [],
+  "race_results": [],
+  "rankings": [],
+  "missions": [],
+  "vehicle_repairs": [
+    {
+      "car_name": "Rx7",
+      "mechanic_name": "Tej",
+      "spare_part_name": "Brake Pad",
+      "spare_part_qty": 2,
+      "repair_cost": 300.0,
+      "status": "completed"
+    }
+  ]
+}

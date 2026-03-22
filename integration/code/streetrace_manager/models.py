@@ -66,3 +66,13 @@ class Mission:
     required_roles: list[str]
     assigned_members: list[dict[str, str]]
     status: str  # "planned", "in_progress", "completed"
+
+
+@dataclass(slots=True)
+class VehicleRepair:
+    car_name: str
+    mechanic_name: str
+    spare_part_name: str
+    spare_part_qty: int
+    repair_cost: float
+    status: str  # "completed"
