@@ -9,10 +9,6 @@
 	- `X-Roll-Number` required for all endpoints
 	- `X-User-ID` required for user-scoped endpoints
 
-This report combines:
-1. Manual exploration findings from `exploration.txt`
-2. Automated execution results from `pytest tests/`
-
 ---
 
 ## 2) Test Case Design (as required by problem statement)
@@ -24,30 +20,6 @@ Test cases were designed per endpoint to cover:
 - **Missing fields**
 - **Wrong data types / wrong formats**
 - **Boundary values**
-
-### 2.1 Representative designed test cases
-
-| Endpoint | Test Input | Expected Output | Justification |
-|---|---|---|---|
-| `GET /products` | No query params | 200 + active products list | Baseline read operation |
-| `GET /products?search=Apple` | Search term | 200 + matching items | Search behavior correctness |
-| `POST /cart/add` | `{product_id:1, quantity:2}` | 200/201 + item in cart + correct subtotal | Core cart behavior |
-| `POST /cart/add` | `{product_id:1, quantity:0}` | 400 | Lower boundary validation (`quantity >= 1`) |
-| `POST /cart/add` | `{product_id:1, quantity:-1}` | 400 | Invalid negative input |
-| `POST /checkout` | `{payment_method:"UPI"}` | 400 | Enum validation (`COD/WALLET/CARD`) |
-| `POST /checkout` | empty body | 400 | Missing required field (`payment_method`) |
-| `POST /addresses` | valid address fields | 200/201 + created address | CRUD happy path |
-| `POST /addresses` | invalid pincode length | 400 | Boundary/format validation |
-| `PUT /profile` | `name="A"` | 400 | Name min-length boundary |
-| `PUT /profile` | 51-char name | 400 | Name max-length boundary |
-| `PUT /profile` | phone with letters | 400 | Type/format validation |
-| `POST /wallet/add` | `amount=0` | 400 | Lower boundary validation |
-| `POST /wallet/add` | `amount=100001` | 400 | Upper boundary validation |
-| `POST /loyalty/redeem` | points > available | 400 | Business-rule validation |
-| `POST /products/{id}/reviews` | rating=0 or 6 | 400 | Rating range boundaries |
-| `POST /support/ticket` | subject too short | 400 | Input length validation |
-
-> Full automated list implemented across test files in `blackbox/tests/`.
 
 ---
 
